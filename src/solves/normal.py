@@ -197,6 +197,14 @@ def normal_solve(projections, is_wildcard=False, is_limitless=False):
             next_available_transfers = 2
         else:
             next_available_transfers = 3 if transfers_used < available_transfers else 2
+        
+        # Only 2 transfers if wildcarding
+        if is_wildcard:
+            next_available_transfers = 2
+        
+        if is_limitless:
+            print('Team is Limitless so will not be saved for next gameweek, skipping save...')
+            return
 
         team_data = {
             "drivers": selected_drivers,
@@ -204,7 +212,7 @@ def normal_solve(projections, is_wildcard=False, is_limitless=False):
             "available_transfers": next_available_transfers,
             "remaining_budget": new_remaining_budget
         }
-        
+
         # Ensure the 'data' directory exists
         os.makedirs("data", exist_ok=True)
         with open('data/team.json', 'w') as f:
