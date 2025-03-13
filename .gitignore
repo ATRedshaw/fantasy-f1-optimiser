@@ -1,2 +1,11 @@
+# Ignore virtual environment
 venv/
+
+# Keep projections workflow private
 src/projections.py
+
+# Ignore all pycache
+**/__pycache__
+
+# Don't commit the current team
+data/team.json
