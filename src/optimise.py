@@ -22,12 +22,12 @@ def menu():
     Prints a menu for the user to select a solve type.
 
     The options are listed and the user is prompted to enter a number
-    between 1 and 7. If the input is not valid, the user is asked again
+    between 1 and 4. If the input is not valid, the user is asked again
     until a valid choice is entered.
 
     Returns:
         str: The user's choice as a string, one of the following:
-            "1", "2", "3", "4", "5", "6", "7"
+            "1", "2", "3", "4"
     """
     print("Welcome to the Fantasy F1 Optimiser!")
     print("Please select a solve type:")
@@ -35,23 +35,17 @@ def menu():
     print("2. Wildcard solve")
     print("3. Limitless solve")
     print("4. Extra DRS Boost solve")
-    print("5. Autopilot solve")
-    print("6. No Negative solve")
-    print("7. Final Fix solve")
-    choice = input("Enter your choice (1-7): ")
+    choice = input("Enter your choice (1-4): ")
 
-    while choice not in ["1", "2", "3", "4", "5", "6", "7"]:
-        print("Invalid choice. Please enter a number between 1 and 7.")
-        choice = input("Enter your choice (1-7): ")
+    while choice not in ["1", "2", "3", "4"]:
+        print("Invalid choice. Please enter a number between 1 and 4.")
+        choice = input("Enter your choice (1-4): ")
 
     solve_map = {
         "1": "Normal solve",
         "2": "Wildcard solve",
         "3": "Limitless solve",
         "4": "Extra DRS Boost solve",
-        "5": "Autopilot solve",
-        "6": "No Negative solve",
-        "7": "Final Fix solve"
     }
     
     print(f"You have selected: {solve_map[choice]}")
@@ -68,13 +62,10 @@ def call_chosen_solve(projections, choice):
     """
     if choice == "1":
         normal_solve(projections)
-        pass
     elif choice == "2":
-        # wildcard_solve(projections)
-        pass
+        normal_solve(projections, is_wildcard=True)
     elif choice == "3":
-        # limitless_solve(projections)
-        pass
+        normal_solve(projections, is_limitless=True)
     elif choice == "4":
         # extra_drs_boost_solve(projections)
         pass

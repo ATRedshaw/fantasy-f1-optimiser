@@ -4,7 +4,7 @@ import json
 import os
 import yaml
 
-def normal_solve(projections):
+def normal_solve(projections, is_wildcard=False, is_limitless=False):
     """
     Perform a normal solve for the Fantasy F1 team selection with weighted price change.
     
@@ -66,6 +66,15 @@ def normal_solve(projections):
         previous_constructors = []
         available_transfers = 1000  # Unlimited transfers for the first race
         cost_cap = 100.0  # Default budget if no saved team
+
+    # Manages some of the chip optimisation
+    if is_limitless:
+        previous_drivers = []
+        previous_constructors = []
+        available_transfers = 1000
+        cost_cap = 9999.99
+    elif is_wildcard:
+        available_transfers = 1000
 
     # In case drivers/constructors were not defined above
     if 'drivers' not in locals():
@@ -195,6 +204,7 @@ def normal_solve(projections):
             "available_transfers": next_available_transfers,
             "remaining_budget": new_remaining_budget
         }
+        
         # Ensure the 'data' directory exists
         os.makedirs("data", exist_ok=True)
         with open('data/team.json', 'w') as f:
