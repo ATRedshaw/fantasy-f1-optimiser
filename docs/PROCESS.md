@@ -13,6 +13,7 @@ The optimiser uses data retrieved in the following format:
 | `is_constructor`| Boolean indicating if the entity is a constructor |
 | `price`         | Cost to include the entity in the team   |
 | `xPts`          | Expected points for the upcoming race    |
+| `price_change`  | Change in price predicted for the next race  |
 
 - The data includes both drivers and constructors, identified by `is_driver` and `is_constructor`.
 - Prices are updated after each race based on performance, but the optimiser uses the current data for a given race.
@@ -22,6 +23,7 @@ The optimiser uses data retrieved in the following format:
 - **Contents**: The JSON file contains:
   - The list of selected drivers and constructors (by name).
   - The number of available transfers for the next race (`available_transfers`).
+  - The remaining budget for the next race (`remaining_budget`).
 - **First Race**: If the JSON file does not exist, assume no team has been selected (first race), with unlimited transfers.
 - **Post-Optimisation**: After optimisation, the user is prompted to save the new team to the JSON file. If saved, the file is updated with the new team and the calculated available transfers for the next race.
 - **Scope**: The optimiser manages one team at a time, though users can manage up to three teams in Fantasy F1. Multiple teams require separate JSON files or an extension to store multiple teams.
