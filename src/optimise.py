@@ -69,15 +69,6 @@ def call_chosen_solve(projections, choice):
     elif choice == "4":
         # extra_drs_boost_solve(projections)
         pass
-    elif choice == "5":
-        # autopilot_solve(projections)
-        pass
-    elif choice == "6":
-        # no_negative_solve(projections)
-        pass
-    elif choice == "7":
-        # final_fix_solve(projections)
-        pass
     else:
         print("Could not launch a solve for invalid solve type.")
 
