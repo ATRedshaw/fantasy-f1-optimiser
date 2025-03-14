@@ -22,12 +22,12 @@ def menu():
     Prints a menu for the user to select a solve type.
 
     The options are listed and the user is prompted to enter a number
-    between 1 and 4. If the input is not valid, the user is asked again
+    between 1 and 5. If the input is not valid, the user is asked again
     until a valid choice is entered.
 
     Returns:
         str: The user's choice as a string, one of the following:
-            "1", "2", "3", "4"
+            "1", "2", "3", "4", "5"
     """
     print("Welcome to the Fantasy F1 Optimiser!")
     print("Please select a solve type:")
@@ -35,17 +35,19 @@ def menu():
     print("2. Wildcard solve")
     print("3. Limitless solve")
     print("4. Extra DRS Boost solve")
-    choice = input("Enter your choice (1-4): ")
+    print("5. Exit")
+    choice = input("Enter your choice (1-5): ")
 
-    while choice not in ["1", "2", "3", "4"]:
-        print("Invalid choice. Please enter a number between 1 and 4.")
-        choice = input("Enter your choice (1-4): ")
+    while choice not in ["1", "2", "3", "4", "5"]:
+        print("Invalid choice. Please enter a number between 1 and 5.")
+        choice = input("Enter your choice (1-5): ")
 
     solve_map = {
         "1": "Normal solve",
         "2": "Wildcard solve",
         "3": "Limitless solve",
         "4": "Extra DRS Boost solve",
+        "5": "Exit"
     }
     
     print(f"You have selected: {solve_map[choice]}")
@@ -58,7 +60,7 @@ def call_chosen_solve(projections, choice):
     Args:
         projections (pd.DataFrame): The DataFrame containing the projections.
         choice (str): The user's choice as a string, one of the following:
-            "1", "2", "3", "4", "5", "6", "7"
+            "1", "2", "3", "4", "5"
     """
     if choice == "1":
         normal_solve(projections)
@@ -69,10 +71,16 @@ def call_chosen_solve(projections, choice):
     elif choice == "4":
         # extra_drs_boost_solve(projections)
         pass
+    elif choice == "5":
+        print("Exiting the program.")
+        exit()
     else:
         print("Could not launch a solve for invalid solve type.")
 
-if __name__ == "__main__":
+def main():
     projections = fetch_projections()
     choice = menu()
     call_chosen_solve(projections, choice)
+
+if __name__ == "__main__":
+    main()
