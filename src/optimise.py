@@ -1,5 +1,6 @@
 from projections import generate_projections
 from solves.normal import normal_solve
+from solves.drs import drs_solve
 
 def fetch_projections():
     """
@@ -69,8 +70,7 @@ def call_chosen_solve(projections, choice):
     elif choice == "3":
         normal_solve(projections, is_limitless=True)
     elif choice == "4":
-        # extra_drs_boost_solve(projections)
-        pass
+        drs_solve(projections)  
     elif choice == "5":
         print("Exiting the program.")
         exit()
