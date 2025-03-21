@@ -218,7 +218,7 @@ def normal_solve(projections, is_wildcard=False, is_limitless=False, show_prints
                 "drivers": selected_drivers,
                 "constructors": selected_constructors,
                 "available_transfers": next_available_transfers,
-                "remaining_budget": new_remaining_budget
+                "remaining_budget": round(new_remaining_budget, 2)
             }
 
             # Ensure the 'data' directory exists
