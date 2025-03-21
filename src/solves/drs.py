@@ -207,7 +207,7 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
                 "drivers": selected_drivers,
                 "constructors": selected_constructors,
                 "available_transfers": next_available_transfers,
-                "remaining_budget": round(new_remaining_budget, 2)
+                "remaining_budget": round(new_remaining_budget, 1)
             }
 
             # Ensure the 'data' directory exists
