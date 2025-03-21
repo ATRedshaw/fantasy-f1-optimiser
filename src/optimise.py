@@ -18,17 +18,43 @@ def fetch_projections():
     projections = generate_projections()
     return projections
 
+def run_all_solves(projections):
+    """
+    Runs all solve types and returns a list of results.
+
+    Args:
+        projections (pd.DataFrame): The projections DataFrame.
+
+    Returns:
+        list: A list of dictionaries containing the results of different solve types.
+    """
+    return [normal_solve(projections), normal_solve(projections, is_wildcard=True), normal_solve(projections, is_limitless=True), drs_solve(projections)]
+
+def compare_solves(solves = []):
+    """
+    Compare the results of different solve types.
+
+    Args:
+        solves (list): A list of dictionaries containing the results of different solve types.
+
+    Returns:
+        None
+    """
+    # For each solve type, print the expected points
+    for solve in solves:
+        print(f"{solve['solve_name']}: {solve['base_xPts']}")
+
 def menu():
     """
     Prints a menu for the user to select a solve type.
 
     The options are listed and the user is prompted to enter a number
-    between 1 and 5. If the input is not valid, the user is asked again
+    between 1 and 6. If the input is not valid, the user is asked again
     until a valid choice is entered.
 
     Returns:
         str: The user's choice as a string, one of the following:
-            "1", "2", "3", "4", "5"
+            "1", "2", "3", "4", "5", "6"
     """
     print("Welcome to the Fantasy F1 Optimiser!")
     print("Please select a solve type:")
@@ -36,19 +62,21 @@ def menu():
     print("2. Wildcard solve")
     print("3. Limitless solve")
     print("4. Extra DRS Boost solve")
-    print("5. Exit")
-    choice = input("Enter your choice (1-5): ")
+    print("5. Run all solves")
+    print("6. Exit")
+    choice = input("Enter your choice (1-6): ")
 
-    while choice not in ["1", "2", "3", "4", "5"]:
-        print("Invalid choice. Please enter a number between 1 and 5.")
-        choice = input("Enter your choice (1-5): ")
+    while choice not in ["1", "2", "3", "4", "5", "6"]:
+        print("Invalid choice. Please enter a number between 1 and 6.")
+        choice = input("Enter your choice (1-6): ")
 
     solve_map = {
         "1": "Normal solve",
         "2": "Wildcard solve",
         "3": "Limitless solve",
         "4": "Extra DRS Boost solve",
-        "5": "Exit"
+        "5": "Run all solves",
+        "6": "Exit"
     }
     
     print(f"You have selected: {solve_map[choice]}")
@@ -61,17 +89,20 @@ def call_chosen_solve(projections, choice):
     Args:
         projections (pd.DataFrame): The DataFrame containing the projections.
         choice (str): The user's choice as a string, one of the following:
-            "1", "2", "3", "4", "5"
+            "1", "2", "3", "4", "5", "6"
     """
     if choice == "1":
-        normal_solve(projections)
+        normal_projections = normal_solve(projections)
     elif choice == "2":
-        normal_solve(projections, is_wildcard=True)
+        wildcard_projections = normal_solve(projections, is_wildcard=True)
     elif choice == "3":
-        normal_solve(projections, is_limitless=True)
+        limitless_projections = normal_solve(projections, is_limitless=True)
     elif choice == "4":
-        drs_solve(projections)  
+        drs_projections = drs_solve(projections)  
     elif choice == "5":
+        all_solve_results = run_all_solves(projections)
+        compare_solves(all_solve_results)
+    elif choice == "6":
         print("Exiting the program.")
         exit()
     else:

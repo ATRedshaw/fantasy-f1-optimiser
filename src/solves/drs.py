@@ -211,3 +211,15 @@ def drs_solve(projections):
         print("Team saved successfully to 'data/team.json'.")
     else:
         print("Team not saved.")
+
+    return_dic = {
+        "solve_name": "DRS Boost",
+        "selected_drivers": selected_drivers,
+        "selected_constructors": selected_constructors,
+        "boosted_driver_2x": boosted_driver_2x,
+        "boosted_driver_3x": boosted_driver_3x,
+        "transfers": transfers,
+        "base_xPts": base_xPts,
+    }
+
+    return return_dic

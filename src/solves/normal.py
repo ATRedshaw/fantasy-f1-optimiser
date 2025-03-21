@@ -220,3 +220,20 @@ def normal_solve(projections, is_wildcard=False, is_limitless=False):
         print("Team saved successfully to 'data/team.json'.")
     else:
         print("Team not saved.")
+
+    solve_name = "Normal"
+    if is_wildcard:
+        solve_name = "Wildcard"
+    elif is_limitless:
+        solve_name = "Limitless"
+
+    return_dic = {
+        "solve_name": solve_name,
+        "selected_drivers": selected_drivers,
+        "selected_constructors": selected_constructors,
+        "boosted_driver": boosted_driver,
+        "transfers": transfers,
+        "base_xPts": base_xPts,
+    }
+
+    return return_dic
