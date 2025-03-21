@@ -18,7 +18,7 @@ def fetch_projections():
     projections = generate_projections()
     return projections
 
-def run_all_solves(projections):
+def run_all_solves(projections, show_outputs=False, ask_save=False):
     """
     Runs all solve types and returns a list of results.
 
@@ -28,7 +28,10 @@ def run_all_solves(projections):
     Returns:
         list: A list of dictionaries containing the results of different solve types.
     """
-    return [normal_solve(projections), normal_solve(projections, is_wildcard=True), normal_solve(projections, is_limitless=True), drs_solve(projections)]
+    return [normal_solve(projections, show_prints=show_outputs, ask_to_save=ask_save), 
+        normal_solve(projections, is_wildcard=True, show_prints=show_outputs, ask_to_save=ask_save), 
+        normal_solve(projections, is_limitless=True, show_prints=show_outputs, ask_to_save=ask_save), 
+        drs_solve(projections, show_prints=show_outputs, ask_to_save=ask_save)]
 
 def compare_solves(solves = []):
     """
@@ -38,45 +41,48 @@ def compare_solves(solves = []):
         solves (list): A list of dictionaries containing the results of different solve types.
 
     Returns:
-        None
+        dict: A dictionary mapping solve types to their differences from normal solve
     """
-    # For each solve type, print the expected points
+    normal_xpts = solves[0]['base_xPts']
+    differences = {}
     for solve in solves:
-        print(f"{solve['solve_name']}: {solve['base_xPts']}")
+        differences[solve['solve_name']] = solve['base_xPts'] - normal_xpts
+    return differences
 
-def menu():
+def menu(differences):
     """
     Prints a menu for the user to select a solve type.
 
     The options are listed and the user is prompted to enter a number
-    between 1 and 6. If the input is not valid, the user is asked again
+    between 1 and 5. If the input is not valid, the user is asked again
     until a valid choice is entered.
+
+    Args:
+        differences (dict): Dictionary mapping solve types to their point differences
 
     Returns:
         str: The user's choice as a string, one of the following:
-            "1", "2", "3", "4", "5", "6"
+            "1", "2", "3", "4", "5"
     """
     print("Welcome to the Fantasy F1 Optimiser!")
     print("Please select a solve type:")
-    print("1. Normal solve")
-    print("2. Wildcard solve")
-    print("3. Limitless solve")
-    print("4. Extra DRS Boost solve")
-    print("5. Run all solves")
-    print("6. Exit")
-    choice = input("Enter your choice (1-6): ")
+    print(f"1. Normal solve (+{differences['Normal']:.2f})")
+    print(f"2. Wildcard solve (+{differences['Wildcard']:.2f})")
+    print(f"3. Limitless solve (+{differences['Limitless']:.2f})")
+    print(f"4. Extra DRS Boost solve (+{differences['DRS Boost']:.2f})")
+    print("5. Exit")
+    choice = input("Enter your choice (1-5): ")
 
-    while choice not in ["1", "2", "3", "4", "5", "6"]:
-        print("Invalid choice. Please enter a number between 1 and 6.")
-        choice = input("Enter your choice (1-6): ")
+    while choice not in ["1", "2", "3", "4", "5"]:
+        print("Invalid choice. Please enter a number between 1 and 5.")
+        choice = input("Enter your choice (1-5): ")
 
     solve_map = {
         "1": "Normal solve",
         "2": "Wildcard solve",
         "3": "Limitless solve",
         "4": "Extra DRS Boost solve",
-        "5": "Run all solves",
-        "6": "Exit"
+        "5": "Exit"
     }
     
     print(f"You have selected: {solve_map[choice]}")
@@ -89,7 +95,7 @@ def call_chosen_solve(projections, choice):
     Args:
         projections (pd.DataFrame): The DataFrame containing the projections.
         choice (str): The user's choice as a string, one of the following:
-            "1", "2", "3", "4", "5", "6"
+            "1", "2", "3", "4", "5"
     """
     if choice == "1":
         normal_projections = normal_solve(projections)
@@ -100,18 +106,26 @@ def call_chosen_solve(projections, choice):
     elif choice == "4":
         drs_projections = drs_solve(projections)  
     elif choice == "5":
-        all_solve_results = run_all_solves(projections)
-        compare_solves(all_solve_results)
-    elif choice == "6":
         print("Exiting the program.")
         exit()
     else:
         print("Could not launch a solve for invalid solve type.")
 
+    run_again = input("Would you like to run another solve? (y/n): ")
+    if run_again == "y":
+        return True
+    else:
+        return False
+
+
 def main():
     projections = fetch_projections()
-    choice = menu()
-    call_chosen_solve(projections, choice)
+    # Get initial differences by running all solves silently
+    differences = compare_solves(run_all_solves(projections, show_outputs=False, ask_save=False))
+    run_again = True
+    while run_again:
+        choice = menu(differences)
+        run_again = call_chosen_solve(projections, choice)
 
 if __name__ == "__main__":
     main()

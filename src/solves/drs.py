@@ -3,7 +3,7 @@ import json
 import os
 import yaml
 
-def drs_solve(projections):
+def drs_solve(projections, show_prints=True, ask_to_save=True):
     """
     Perform a DRS solve for the Fantasy F1 team selection with weighted price change.
     
@@ -19,11 +19,17 @@ def drs_solve(projections):
     Args:
         projections (pd.DataFrame): DataFrame containing projections with columns:
             'name', 'is_driver', 'is_constructor', 'price', 'xPts', 'price_change'.
+        show_prints (bool): Whether to print output messages
+        ask_to_save (bool): Whether to prompt to save the team
     
     Returns:
-        None: The function prints out the team details, transfers, and optionally saves the team
-        to 'data/team.json' with the remaining budget.
+        dict: A dictionary containing the selected drivers, constructors, and other relevant details
+              such as the total expected points and the type of solve performed.
     """
+    def print_if_enabled(*args, **kwargs):
+        if show_prints:
+            print(*args, **kwargs)
+
     # Load the solver configuration from config/solver_config.yml
     config_file = os.path.join("config", "solver_config.yml")
     if os.path.exists(config_file):
@@ -31,7 +37,7 @@ def drs_solve(projections):
             config = yaml.safe_load(f)
         price_change_weight = config.get('price_change_weight', 0)
     else:
-        print("Config file not found. Defaulting price_change_weight to 0.")
+        print_if_enabled("Config file not found. Defaulting price_change_weight to 0.")
         price_change_weight = 0
 
     # Load previous team from 'data/team.json' if it exists
@@ -44,7 +50,7 @@ def drs_solve(projections):
                 available_transfers = data['available_transfers']
                 remaining_budget = data['remaining_budget']
             except json.JSONDecodeError:
-                print("Invalid JSON data in 'data/team.json'. Using default values.")
+                print_if_enabled("Invalid JSON data in 'data/team.json'. Using default values.")
                 previous_drivers = []
                 previous_constructors = []
                 available_transfers = 1000
@@ -123,7 +129,7 @@ def drs_solve(projections):
     # Solve the problem with suppressed solver output
     status = prob.solve(lp.PULP_CBC_CMD(msg=False))
     if status != lp.LpStatusOptimal:
-        print("No optimal solution found. Please check the constraints or input data.")
+        print_if_enabled("No optimal solution found. Please check the constraints or input data.")
         return
 
     # Extract results
@@ -165,52 +171,52 @@ def drs_solve(projections):
         transfers.append(f"{constructors_to_remove[i]} > {constructors_to_add[i]}")
 
     # Display transfers
-    print("\nTransfers to Make:")
-    print("---------------------")
+    print_if_enabled("\nTransfers to Make:")
+    print_if_enabled("---------------------")
     if transfers:
         for transfer in transfers:
-            print(transfer)
+            print_if_enabled(transfer)
     else:
-        print("No transfers needed. The optimal team is the same as the previous team.")
+        print_if_enabled("No transfers needed. The optimal team is the same as the previous team.")
 
     # Display optimal team details
-    print("\nOptimal Team Selection:")
-    print("---------------------")
-    print("Selected Drivers:", ", ".join(selected_drivers))
-    print("Selected Constructors:", ", ".join(selected_constructors))
-    print("2x DRS Boost Driver:", boosted_driver_2x)
-    print("3x DRS Boost Driver:", boosted_driver_3x)
-    # Print the base expected points (without price change weighting)
-    print(f"Total Expected Points (Base): {base_xPts:.2f}")
-    print(f"Transfers Used: {transfers_used}")
-    print(f"Penalty Transfers: {penalty}")
-    print(f"Available Transfers: {available_transfers}")
-    print(f"Cost Cap: {cost_cap:.2f}")
-    print(f"Total Team Cost: {total_selected_cost:.2f}")
-    print(f"Remaining Budget: {new_remaining_budget:.2f}")
+    print_if_enabled("\nOptimal Team Selection:")
+    print_if_enabled("---------------------")
+    print_if_enabled("Selected Drivers:", ", ".join(selected_drivers))
+    print_if_enabled("Selected Constructors:", ", ".join(selected_constructors))
+    print_if_enabled("2x DRS Boost Driver:", boosted_driver_2x)
+    print_if_enabled("3x DRS Boost Driver:", boosted_driver_3x)
+    print_if_enabled(f"Total Expected Points (Base): {base_xPts:.2f}")
+    print_if_enabled(f"Transfers Used: {transfers_used}")
+    print_if_enabled(f"Penalty Transfers: {penalty}")
+    print_if_enabled(f"Available Transfers: {available_transfers}")
+    print_if_enabled(f"Cost Cap: {cost_cap:.2f}")
+    print_if_enabled(f"Total Team Cost: {total_selected_cost:.2f}")
+    print_if_enabled(f"Remaining Budget: {new_remaining_budget:.2f}")
 
-    # Prompt to save the team
-    save = input("\nDo you want to save this team? (y/n): ").lower().strip()
-    if save == 'y':
-        if not previous_drivers and not previous_constructors:  # First race
-            next_available_transfers = 2
+    # Only prompt to save if ask_to_save is True
+    if ask_to_save:
+        save = input("\nDo you want to save this team? (y/n): ").lower().strip()
+        if save == 'y':
+            if not previous_drivers and not previous_constructors:  # First race
+                next_available_transfers = 2
+            else:
+                next_available_transfers = 3 if transfers_used < available_transfers else 2
+
+            team_data = {
+                "drivers": selected_drivers,
+                "constructors": selected_constructors,
+                "available_transfers": next_available_transfers,
+                "remaining_budget": new_remaining_budget
+            }
+
+            # Ensure the 'data' directory exists
+            os.makedirs("data", exist_ok=True)
+            with open('data/team.json', 'w') as f:
+                json.dump(team_data, f, indent=4)
+            print_if_enabled("Team saved successfully to 'data/team.json'.")
         else:
-            next_available_transfers = 3 if transfers_used < available_transfers else 2
-
-        team_data = {
-            "drivers": selected_drivers,
-            "constructors": selected_constructors,
-            "available_transfers": next_available_transfers,
-            "remaining_budget": new_remaining_budget
-        }
-
-        # Ensure the 'data' directory exists
-        os.makedirs("data", exist_ok=True)
-        with open('data/team.json', 'w') as f:
-            json.dump(team_data, f, indent=4)
-        print("Team saved successfully to 'data/team.json'.")
-    else:
-        print("Team not saved.")
+            print_if_enabled("Team not saved.")
 
     return_dic = {
         "solve_name": "DRS Boost",
