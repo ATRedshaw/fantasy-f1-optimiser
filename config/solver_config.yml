@@ -1,1 +1,2 @@
-price_change_weight: 3.0
+price_change_weight: 4.0
+roll_transfer_weight: 10.0
