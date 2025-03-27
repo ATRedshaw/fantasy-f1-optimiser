@@ -2,6 +2,7 @@ import pulp as lp
 import json
 import os
 import yaml
+import pandas as pd
 
 def drs_solve(projections, show_prints=True, ask_to_save=True):
     """
@@ -36,9 +37,11 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
         price_change_weight = config.get('price_change_weight', 0)
+        roll_transfer_weight = config.get('roll_transfer_weight', 0)
     else:
         print_if_enabled("Config file not found. Defaulting price_change_weight to 0.")
         price_change_weight = 0
+        roll_transfer_weight = 0
 
     # Load previous team from 'data/team.json' if it exists
     if os.path.exists('data/team.json'):
@@ -87,6 +90,7 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
     b2 = lp.LpVariable.dicts("boost2x", drivers.index, 0, 1, lp.LpBinary)         # 2x DRS boost assignment
     b3 = lp.LpVariable.dicts("boost3x", drivers.index, 0, 1, lp.LpBinary)         # 3x DRS boost assignment
     penalty_transfers = lp.LpVariable("penalty_transfers", 0, None, lp.LpContinuous) # Excess transfers
+    roll_transfer = lp.LpVariable("roll_transfer", 0, 1, lp.LpBinary)  # Binary variable for rolling a transfer
 
     # Constraints
     prob += lp.lpSum([x[d] for d in drivers.index]) == 5, "Exactly_5_Drivers"
@@ -108,6 +112,10 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
         lp.lpSum([y[c] for c in constructors.index if c not in previous_constructors])
     )
     prob += penalty_transfers >= total_transfers - available_transfers, "Penalty_Transfers"
+    
+    # Roll transfer constraint - roll_transfer is 1 if transfers used < available
+    if available_transfers > 1:  # Only consider rolling if we have transfers to roll
+        prob += roll_transfer <= 1 - (total_transfers / available_transfers), "Roll_Transfer_Condition"
 
     # Build the objective function
     # Base expected points (without price change bonus)
@@ -122,9 +130,9 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
         lp.lpSum([constructors.loc[c, 'price_change'] * y[c] for c in constructors.index]) +
         lp.lpSum([drivers.loc[d, 'price_change'] * x[d] for d in drivers.index])
     )
-    # Combine the two, subtracting the penalty for excess transfers
-    objective = base_points + price_change_weight * price_change_term - 10 * penalty_transfers
-    prob += objective, "Total_Expected_Points_With_PriceChange"
+    # Combine the two, subtracting the penalty for excess transfers and adding bonus for rolling transfers
+    objective = base_points + price_change_weight * price_change_term - 10 * penalty_transfers + roll_transfer_weight * roll_transfer
+    prob += objective, "Total_Expected_Points_With_PriceChange_And_RollTransfer"
 
     # Solve the problem with suppressed solver output
     status = prob.solve(lp.PULP_CBC_CMD(msg=False))
@@ -157,6 +165,12 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
     selected_constructors_prices = [constructors.loc[c, 'price'] for c in selected_constructors]
     total_selected_cost = sum(selected_drivers_prices) + sum(selected_constructors_prices)
     new_remaining_budget = cost_cap - total_selected_cost
+    
+    # Calculate projected team price change
+    projected_price_change = (
+        sum(drivers.loc[d, 'price_change'] for d in selected_drivers) +
+        sum(constructors.loc[c, 'price_change'] for c in selected_constructors)
+    )
 
     # Determine transfers to make
     drivers_to_add = [d for d in selected_drivers if d not in previous_drivers]
@@ -187,6 +201,7 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
     print_if_enabled("2x DRS Boost Driver:", boosted_driver_2x)
     print_if_enabled("3x DRS Boost Driver:", boosted_driver_3x)
     print_if_enabled(f"Total Expected Points (Base): {base_xPts:.2f}")
+    print_if_enabled(f"Projected Team Price Change: {projected_price_change:.2f}")
     print_if_enabled(f"Transfers Used: {transfers_used}")
     print_if_enabled(f"Penalty Transfers: {penalty}")
     print_if_enabled(f"Available Transfers: {available_transfers}")
@@ -226,6 +241,7 @@ def drs_solve(projections, show_prints=True, ask_to_save=True):
         "boosted_driver_3x": boosted_driver_3x,
         "transfers": transfers,
         "base_xPts": base_xPts,
+        "projected_price_change": projected_price_change
     }
 
     return return_dic
