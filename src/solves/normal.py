@@ -44,6 +44,15 @@ def normal_solve(projections, is_wildcard=False, is_limitless=False, show_prints
         price_change_weight = 0
         roll_transfer_weight = 0
 
+    # The team reverts if the limitless chip is played, so price changes and rolled transfers don;'t matter.
+    if is_limitless:
+        price_change_weight = 0
+        roll_transfer_weight = 0
+
+    # Transfers cant be rolled in the week of a wildcard, so this value can be set to 0 if the wildcard chip is played.
+    if is_wildcard:
+        roll_transfer_weight = 0
+
     # Load previous team from 'data/team.json' if it exists
     if os.path.exists('data/team.json'):
         with open('data/team.json', 'r') as f:
